@@ -1,0 +1,86 @@
+version: '3'
+services:
+  redis-master-1:
+    container_name: redis-master-1
+    image: redis
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./redis-master-1.conf:/etc/redis.conf
+    restart: always
+    ports:
+      - 7001:7001
+      - 17001:17001
+      - 7002:7002
+      - 17002:17002
+      - 7003:7003
+      - 17003:17003
+      - 7101:7101
+      - 17101:17101
+      - 7102:7102
+      - 17102:17102
+      - 7103:7103
+      - 17103:17103
+
+  redis-master-2:
+    container_name: redis-master-2
+    image: redis
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./redis-master-2.conf:/etc/redis.conf
+    restart: always
+    network_mode: "service:redis-master-1"
+
+  redis-master-3:
+    container_name: redis-master-3
+    image: redis
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./redis-master-3.conf:/etc/redis.conf
+    restart: always
+    network_mode: "service:redis-master-1"
+
+  redis-slave-1:
+    container_name: redis-slave-1
+    image: redis
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./redis-slave-1.conf:/etc/redis.conf
+    restart: always
+    network_mode: "service:redis-master-1"
+
+  redis-slave-2:
+    container_name: redis-slave-2
+    image: redis
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./redis-slave-2.conf:/etc/redis.conf
+    restart: always
+    network_mode: "service:redis-master-1"
+
+  redis-slave-3:
+    container_name: redis-slave-3
+    image: redis
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./redis-slave-3.conf:/etc/redis.conf
+    restart: always
+    network_mode: "service:redis-master-1"
+
+  redis-cluster-init:
+    image: redis
+    container_name: redis-cluster-init
+    depends_on:
+      - redis-master-1
+      - redis-master-2
+      - redis-master-3
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    volumes:
+      - ./init-cluster.sh:/init-cluster.sh
+    entrypoint: ["sh", "/init-cluster.sh"]
+    network_mode: "service:redis-master-1"
+
+networks:
+  redis-cluster:
+    driver: bridge
